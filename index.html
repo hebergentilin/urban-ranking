@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Steak Ranking</title>
+	<link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.12/css/jquery.dataTables.min.css">
+	<script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
+	<script src="//cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js"></script>		
+	<script>
+		$(document).ready(function() {
+			$.get("/read-log", function( data ){
+				var players_sliced = {};
+				var players_butcher = {};
+				$.each(data, function(index, line){
+					if (line.length > 0) {
+						sliced = /^([\w\-\.]+)/g.exec(line)[1];
+						butcher = /([\w\-\.]+)\.\|?/g.exec(line)[1];
+						try {
+							date = /\|(.*)\|$/.exec(line)[1];
+						} catch(e) {
+							date = "";
+						}
+
+						players_sliced[sliced] = (players_sliced[sliced] || {});
+						players_sliced[sliced]['count'] = (players_sliced[sliced]['count'] || 0) + 1;
+						players_sliced[sliced]['butcher'] = (players_sliced[sliced]['butcher'] || []);
+						players_sliced[sliced]['butcher'].push(butcher + (!!date ? (" em " + date) : ""));
+
+						players_butcher[butcher] = (players_butcher[butcher] || 0) + 1;
+					}
+				});
+
+				var data_sliced = [];
+				var data_butcher = [];
+				$.each(players_sliced, function(key, value) {
+					data_sliced.push({"nome": key, "butcher": value.butcher.join('<br>'), "count": value.count})
+				});
+				$.each(players_butcher, function(key, value) {
+					data_butcher.push({"nome": key, "count": value})
+				});
+
+				$("#ranking-steakes").DataTable({
+					data: data_sliced,
+					columns: [
+				        { data: "nome" },
+				        { data: "butcher" },
+				        { data: 'count' }
+        			],
+        			"order": [[2, "desc"]]
+				});
+
+				$("#ranking-butchers").DataTable({
+					data: data_butcher,
+					columns: [
+				        { data: "nome" },
+				        { data: 'count' }
+        			],
+        			"order": [[1, "desc"]]
+				});
+			});
+		}); 
+	</script>
+</head>
+<body>
+	<h1>Ranking of Steaks</h1>
+	<table id="ranking-steakes">
+		<thead>
+		<tr>
+			<th>nome</th>
+			<th>butcher</th>
+			<th>count</th>
+		</tr>
+		</thead>
+	</table>
+ 	<br>
+ 	<br>
+ 	<br>
+ 	<br>
+	<h1>Ranking of Butchers</h1>
+	<table id="ranking-butchers">
+		<tr>
+			<th>nome</th>
+			<th>count</th>
+		</tr>
+	</table>
+</body>
+</html>
