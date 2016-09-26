@@ -1,0 +1,66 @@
+egrep '\b(sliced|captured)\b'
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Steak Ranking</title>
+	<link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.12/css/jquery.dataTables.min.css">
+	<script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
+	<script src="//cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js"></script>		
+	<script>
+		$(document).ready(function() {
+			$.get("/read-log", function( data ){
+				var players_flag = {};
+				
+				$.each(data, function(index, line){
+					if( line.length > 0 && line.indexOf('captured') !== -1){
+						catcher = /(\^\d[A-z -.]+)/g.exec(line)[0];
+						try {
+							date = /\|(.*)\|$/.exec(line)[1];
+						} catch(e) {
+							date = "";
+						}	
+						players_flag[catcher] = (players_flag[catcher] || {});
+
+						players_flag[catcher]['date'] = (players_flag[catcher]['date'] || []);
+						players_flag[catcher]['date'].push((!!date ? (date) : ""));
+
+
+						players_flag[catcher]['count'] = (players_flag[catcher]['count'] || 0) + 1;
+					}
+
+					});			
+				var data_flag = [];
+
+				$.each(players_flag, function(key, value) {
+					
+					data_flag.push({"nome": key, "date": value.date.join('<br>'), "count": value.count})
+				});
+
+
+				$("#ranking-flags").DataTable({
+					data: data_flag,
+					columns: [
+				        { data: "nome" },
+				        { data: "date" },
+				        { data: 'count' }
+        			],
+        			"order": [[2, "desc"]]
+				});
+			});
+		}); 
+	</script>
+</head>
+<body>
+	<h1>Ranking of Flags Captured</h1>
+	<table id="ranking-flags">
+		<thead>
+		<tr>
+			<th>nome</th>
+			<th>date</th>
+			<th>count</th>
+		</tr>
+		</thead>
+	</table>
+</body>
+</html>
