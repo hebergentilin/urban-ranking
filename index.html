@@ -11,8 +11,10 @@
 			$.get("/read-log", function( data ){
 				var players_sliced = {};
 				var players_butcher = {};
+				var players_flag = {};
+
 				$.each(data, function(index, line){
-					if (line.length > 0) {
+					if (line.length > 0 && line.indexOf('sliced') !== -1) {
 						sliced = /^([\w\-\.]+)/g.exec(line)[1];
 						butcher = /([\w\-\.]+)\.\|?/g.exec(line)[1];
 						try {
@@ -27,16 +29,36 @@
 						players_sliced[sliced]['butcher'].push(butcher + (!!date ? (" em " + date) : ""));
 
 						players_butcher[butcher] = (players_butcher[butcher] || 0) + 1;
+					} else if( line.length > 0 && line.indexOf('captured') !== -1) {
+						catcher = /(\^\d[A-z -.]+)/g.exec(line)[0].replace(/\^\d?/gi, '');
+						try {
+							date = /\|(.*)\|$/.exec(line)[1];
+						} catch(e) {
+							date = "";
+						}	
+						players_flag[catcher] = (players_flag[catcher] || {});
+
+						players_flag[catcher]['date'] = (players_flag[catcher]['date'] || []);
+						players_flag[catcher]['date'].push((!!date ? (date) : ""));
+
+
+						players_flag[catcher]['count'] = (players_flag[catcher]['count'] || 0) + 1;
 					}
 				});
 
 				var data_sliced = [];
 				var data_butcher = [];
+				var data_flag = [];
+
 				$.each(players_sliced, function(key, value) {
 					data_sliced.push({"nome": key, "butcher": value.butcher.join('<br>'), "count": value.count})
 				});
 				$.each(players_butcher, function(key, value) {
 					data_butcher.push({"nome": key, "count": value})
+				});
+				$.each(players_flag, function(key, value) {
+					
+					data_flag.push({"nome": key, "date": value.date.join('<br>'), "count": value.count})
 				});
 
 				$("#ranking-steakes").DataTable({
@@ -57,31 +79,71 @@
         			],
         			"order": [[1, "desc"]]
 				});
+				$("#ranking-flags").DataTable({
+					data: data_flag,
+					columns: [
+				        { data: "nome" },
+				        { data: "date" },
+				        { data: 'count' }
+        			],
+        			"order": [[2, "desc"]]
+				});
 			});
 		}); 
 	</script>
 </head>
 <body>
+	<style>
+		.steaks {
+			border-collapse: 
+		}
+		.steaks td {
+		    border-collapse: separate;
+		    border: 22px solid #fff;
+		}
+		.steaks tr>td:nth-child(2) {
+		    height: 60px;
+		    width: 500px;
+		    overflow-y: scroll;
+		    display: inline-block;
+		    padding: 10px;
+		}
+	</style>
+	<!-- <h1>Jogue Direito</h1>
+	<img src="https://i.ytimg.com/vi/52Zzc83Kj6I/maxresdefault.jpg"/> -->
 	<h1>Ranking of Steaks</h1>
-	<table id="ranking-steakes">
+	<table id="ranking-steakes" class="steaks">
 		<thead>
 		<tr>
 			<th>nome</th>
-			<th>butcher</th>
+			<th width="500">butcher</th>
+			<th width="70">count</th>
+		</tr>
+		</thead>
+	</table>
+	 	<br>
+	 	<br>
+	 	<br>
+	 	<br>
+	<h1>Ranking of Butchers</h1>
+	<table id="ranking-butchers">
+		<thead>
+		<tr>
+			<th>nome</th>
 			<th>count</th>
 		</tr>
 		</thead>
 	</table>
- 	<br>
- 	<br>
- 	<br>
- 	<br>
-	<h1>Ranking of Butchers</h1>
-	<table id="ranking-butchers">
+
+	<h1>Capture the Flag</h1>
+	<table id="ranking-flags" class="steaks">
+		<thead>
 		<tr>
 			<th>nome</th>
+			<th>date</th>
 			<th>count</th>
 		</tr>
+		</thead>
 	</table>
 </body>
 </html>
