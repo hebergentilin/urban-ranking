@@ -15,7 +15,8 @@
 
 				$.each(data, function(index, line){
 					if (line.length > 0 && line.indexOf('sliced') !== -1) {
-						sliced = /^([\w\-\.]+)/g.exec(line)[1];
+						line = line.replace(/(\^[0-9])/g, '');
+						sliced = /([\w\-\.]+)/g.exec(line)[1];
 						butcher = /([\w\-\.]+)\.\|?/g.exec(line)[1];
 						try {
 							date = /\|(.*)\|$/.exec(line)[1];
@@ -88,6 +89,10 @@
         			],
         			"order": [[2, "desc"]]
 				});
+
+				$('#ranking-steakes tbody tr:eq(0) td:eq(0)').prepend('<img src="abacaxi.png" style="width: 30px">');
+				$('#ranking-butchers tbody tr:eq(0) td:eq(0)').prepend('<img src="knife.ico" style="width: 30px">');
+				$('#ranking-flags tbody tr:eq(0) td:eq(0)').prepend('<img src="flag.png" style="width: 30px">');
 			});
 		}); 
 	</script>
@@ -113,7 +118,7 @@
 	<img src="https://i.ytimg.com/vi/52Zzc83Kj6I/maxresdefault.jpg"/> -->
 	<h1>Ranking of Steaks</h1>
 	<table id="ranking-steakes" class="steaks">
-		<thead>
+	<thead>
 		<tr>
 			<th>nome</th>
 			<th width="500">butcher</th>
